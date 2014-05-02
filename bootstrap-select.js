@@ -408,17 +408,29 @@
                 getPlacement = function($element) {
                     $drop.addClass($element.attr('class').replace(/form-control/gi, '')).toggleClass('dropup', $element.hasClass('dropup'));
                     pos = $element.offset();
+                    var overflow = $drop.find('>:first-child').width()+pos.left-$(window).width()+10; // 10px right margin
                     actualHeight = $element.hasClass('dropup') ? 0 : $element[0].offsetHeight;
-                    $drop.css({'top' : pos.top + actualHeight, 'left' : pos.left, 'width' : $element[0].offsetWidth, 'position' : 'absolute'});
-                };
+                    $drop.css({'visibility':'visible','top' : pos.top + actualHeight, 'left' : Math.min(pos.left,pos.left-overflow), 'width' : $element[0].offsetWidth, 'position' : 'absolute'});
+                    
+            };
             this.$newElement.on('click', function() {
                 if (that.isDisabled()) {
                     return;
                 }
-                getPlacement($(this));
+                var elm = this;
+                
+                // Wait for content size to be available before computing placement
+                setTimeout(function() {
+                    getPlacement($(elm));
+                });
+                
+                // Safe placement
+                $drop.css({visibility:'hidden',top:0,left:0,width:0,height:0,position:'absolute'});
+                
                 $drop.appendTo(that.options.container);
                 $drop.toggleClass('open', !$(this).hasClass('open'));
                 $drop.append(that.$menu);
+                
             });
             $(window).resize(function() {
                 getPlacement(that.$newElement);
