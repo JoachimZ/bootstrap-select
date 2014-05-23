@@ -733,6 +733,7 @@
         },
 
         keydown: function(e) {
+            e.stopPropagation();
             var $this,
                 $items,
                 $parent,
