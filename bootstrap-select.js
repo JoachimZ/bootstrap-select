@@ -447,6 +447,7 @@
                     $drop.removeClass('open');
                 }
             }
+            $('html').on('click',htmlClickCallback);
 
             this.deregistrations.push(function() {
                 $(window).unbind('resize',windowScrollResizeCallback);
