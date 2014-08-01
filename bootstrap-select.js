@@ -24,6 +24,7 @@
         this.$button = null;
         this.$menu = null;
         this.$lis = null;
+        this.deregistrations = null;
 
         //Merge defaults, options and data-attributes to make our options
         this.options = $.extend({}, $.fn.selectpicker.defaults, this.$element.data(), typeof options == 'object' && options);
@@ -59,6 +60,7 @@
             this.$menu = this.$newElement.find('> .dropdown-menu');
             this.$button = this.$newElement.find('> button');
             this.$searchbox = this.$newElement.find('input');
+            this.deregistrations = [];
 
             if (id !== undefined) {
                 this.$button.attr('data-id', id);
@@ -432,16 +434,24 @@
                 $drop.append(that.$menu);
                 
             });
-            $(window).resize(function() {
+
+            var windowScrollResizeCallback = function() {
                 getPlacement(that.$newElement);
-            });
-            $(window).on('scroll', function() {
-                getPlacement(that.$newElement);
-            });
-            $('html').on('click', function(e) {
+            };
+
+            $(window).resize(windowScrollResizeCallback);
+            $(window).on('scroll',windowScrollResizeCallback);
+
+            var htmlClickCallback = function(e) {
                 if ($(e.target).closest(that.$newElement).length < 1) {
                     $drop.removeClass('open');
                 }
+            }
+
+            this.deregistrations.push(function() {
+                $(window).unbind('resize',windowScrollResizeCallback);
+                $(window).unbind('scroll',windowScrollResizeCallback);
+                $('html').unbind('click',htmlClickCallback);
             });
         },
 
@@ -515,9 +525,13 @@
 
         clickListener: function() {
             var that = this;
-
-            $('body').on('touchstart.dropdown', '.dropdown-menu', function(e) {
+            var touchStartCallback =function(e) {
                 e.stopPropagation();
+            };
+            $('body').on('touchstart.dropdown', '.dropdown-menu', touchStartCallback);
+
+            this.deregistrations.push(function() {
+                $('body').unbind('touchstart.dropdown',touchStartCallback);
             });
 
             this.$newElement.on('click', function() {
@@ -908,6 +922,10 @@
         },
 
         destroy: function() {
+            for(var i = 0 ; i<this.deregistrations.length ; i++){
+                this.deregistrations[i]();
+            }
+            this.deregistrations = [];
             this.$newElement.remove();
             this.$element.remove();
         }
